@@ -17,7 +17,7 @@ export default {
     $route(newVal, oldVal) {
       // 实时的传进去
       this.getRouterMatched(newVal.matched)
-      console.log("当前路由的matched", this.items)
+      console.log("Container---Header---Breadcrumb----当前路由的matched", this.items)
     }
   },
   methods: {

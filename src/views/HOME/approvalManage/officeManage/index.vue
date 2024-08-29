@@ -8,6 +8,7 @@ export default {
   name: "officeManage",
   async mounted() {
     await this.getList();
+    // 尝试剥离失败
     // try {
     //   this.tableData = await getTableData().then(() => {
     //     console.log("成功了,数据为", this.tableData)
@@ -15,17 +16,47 @@ export default {
     // } catch (error) {
     //   console.log("error", error)
     // }
+
+    console.log("approvalManage/index --- 查看全局过滤器", this.$options.filters)
+
   },
   data() {
     return {
       // 表格数据
       tableData: [],
+      // 查询参数
       listQuery: {
         pageNo: 1,
         pageSize: 10,
         name: ""
       },
+      // 页数
       rows: 1
+    }
+  },
+  computed: {
+    // 筛选数据
+    filterStatus() {
+      // 原本的
+      // [{text: '2016-05-01', value: '2016-05-01'}, {text: '2016-05-02', value: '2016-05-02'}, {text: '2016-05-03', value: '2016-05-03'}, {text: '2016-05-04', value: '2016-05-04'}]
+
+      // 数据从哪里来? 从表格数据中来
+      // 数组对象去重,创建去重对象
+      let map = new Map();
+      // 遍历需要去重的数据
+      for (let item of this.tableData) {
+        // 拿到后,避免直接修改原数据
+        let v = {...item};  //v就是每一个数据list
+        console.log("approvalManage/index --- 遍历tableData数据的item is", v);
+        // 去重添加
+        if (!map.has(v.status)) {
+          // 格式转换,使用全局过滤器
+          v.text = this.$options.filters["statusFilter"](v.status);
+          map.set(v.status, v)
+        }
+      }
+      const data = [...map.values()]
+      return data.map(item => ({text: item.text, value: item.status}))
     }
   },
   methods: {
@@ -34,15 +65,84 @@ export default {
       let response = await officeList(this.listQuery);
       let {code, data} = response.data;
       if (code === 20000) {
+        console.log("approvalManage/index ---tableList数据请求成功", response);
+
+        console.log("approvalManage/index ---时间是", data.list[0].created)
+
         this.tableData = data.list;
         this.rows = data.rows;
-        console.log("list数据请求成功", response);
-        console.log("tabadata", this.tableData)
-      }
+        console.log("approvalManage/index ---row is ", this.rows)
 
+        console.log("approvalManage/index ---tableData", this.tableData)
+      }
+    },
+    // 筛选
+    filterHandler(value, row, column) {
+      const property = column['property'];
+      return row[property] === value;
     }
 
-  }
+  },
+
+  // 局部过滤器
+  // filters: {
+  //   statusFilter(val) {
+  //     switch (val) {
+  //       case 0:
+  //         return "进件初始"
+  //       case  1:
+  //         return "提交一审"
+  //       case  2:
+  //         return "一审通过"
+  //       case  3:
+  //         return "一审拒绝"
+  //       case  4:
+  //         return "提交二审"
+  //       case  5:
+  //         return "二审通过"
+  //       case  6:
+  //         return "二审拒绝"
+  //       case  7:
+  //         return "提交终审"
+  //       case  8:
+  //         return "终审通过"
+  //       case  9:
+  //         return "终审拒绝"
+  //       case  10:
+  //         return "审批完成"
+  //       case  11:
+  //         return "生成凭证"
+  //     }
+  //   },
+  //   statusStyle(val) {
+  //     switch (val) {
+  //       case 0:
+  //         return "success"
+  //       case  1:
+  //         return "info"
+  //       case  2:
+  //         return "success"
+  //       case  3:
+  //         return "danger"
+  //       case  4:
+  //         return "info"
+  //       case  5:
+  //         return "success"
+  //       case  6:
+  //         return "danger"
+  //       case  7:
+  //         return "info"
+  //       case  8:
+  //         return "success"
+  //       case  9:
+  //         return "danger"
+  //       case  10:
+  //         return "success"
+  //       case  11:
+  //         return "warning"
+  //     }
+  //   }
+  // }
 }
 </script>
 
@@ -65,9 +165,10 @@ export default {
       <el-table
           :data="tableData"
           stripe
-          style="width: 100%">
+          style="width: 100%; height: 100%">
 
         <el-table-column
+            fixed
             type="index"
             label="序号">
         </el-table-column>
@@ -84,6 +185,9 @@ export default {
             prop="created"
             label="申请时间"
             column-key="created">
+          <!--          <template slot-scope="scope">-->
+          <!--            {{scope.row.create | timeFilter}}-->
+          <!--          </template>-->
         </el-table-column>
 
         <el-table-column
@@ -106,7 +210,14 @@ export default {
 
         <el-table-column
             prop="status"
-            label="申请装态">
+            label="申请装态"
+            width="100"
+            :filters="filterStatus"
+            :filter-method="filterHandler"
+        >
+          <template slot-scope="scope">
+            <el-tag :type="scope.row.status | statusStyle"> {{ scope.row.status | statusFilter }}</el-tag>
+          </template>
         </el-table-column>
 
         <el-table-column

@@ -17,11 +17,11 @@ export function initRouter(RouterData, targetArray) {
         // 因为有好几层,所以看看是不是数组了,没有children的是obj,如果还是数组,那就是children了
         if (targetArray instanceof Array) {
             // 最后一定是放进children里
-            console.log("targetArray is ", targetArray)
+            console.log("utils-router----targetArray is ", targetArray)
             targetArray.push(routesObj);
         } else {
             if (!targetArray.children) {
-                targetArray.children = []; 
+                targetArray.children = [];
             }
             targetArray.children.push(routesObj)
         }

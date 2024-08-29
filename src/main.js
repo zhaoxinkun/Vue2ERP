@@ -10,7 +10,7 @@ import 'element-ui/lib/theme-chalk/index.css';
 
 Vue.use(ElementUI);
 
-// 引入样式问文件,vue.config.js
+// 引入样式文件,vue.config.js
 import "@/style/index.scss";
 
 // 禁止vue生产提示
@@ -19,14 +19,18 @@ Vue.config.productionTip = false;
 // 定义全局组件
 // import globalCOM from "@/views/HOME/globalCOM/index.vue";
 // Vue.component("globalCOM", globalCOM)
+
 // 定义全局组件 02
 import "@/components/oldGlobal/common.js"
 
 // 导入国际化
 // import i18n from "@/i18n/i18ns"
 
+// 使用全局过滤器
+import "@/filters"
+
 // 1.0.1
-new Vue({
+const vm = new Vue({
     // 注册使用
     router,
     store,
@@ -35,3 +39,5 @@ new Vue({
         return h(App);
     },
 }).$mount("#app");
+
+console.log("main.js--vm is ", vm)

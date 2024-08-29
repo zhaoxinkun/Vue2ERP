@@ -38,8 +38,8 @@ export default {
 
   name: "SidebarForCom",
   mounted() {
-    console.log(this.val)
-    console.log(this.val.url)
+    console.log("Container--Sidebar--SidebarForCom--",this.val)
+    console.log("Container--Sidebar--SidebarForCom--",this.val.url)
   },
   // 接收数据
   props: {
