@@ -7,6 +7,7 @@ import {officeList} from "@/api/api";
 export default {
   name: "officeManage",
   async mounted() {
+    // 发送请求
     await this.getList();
     // 尝试剥离失败
     // try {
@@ -18,7 +19,6 @@ export default {
     // }
 
     console.log("approvalManage/index --- 查看全局过滤器", this.$options.filters)
-
   },
   data() {
     return {
@@ -26,16 +26,18 @@ export default {
       tableData: [],
       // 查询参数
       listQuery: {
+        // 当前页码
         pageNo: 1,
+        // 一页多少条
         pageSize: 10,
         name: ""
       },
-      // 页数
+      // 总条数
       rows: 1
     }
   },
   computed: {
-    // 筛选数据
+    // 筛选状态数据
     filterStatus() {
       // 原本的
       // [{text: '2016-05-01', value: '2016-05-01'}, {text: '2016-05-02', value: '2016-05-02'}, {text: '2016-05-03', value: '2016-05-03'}, {text: '2016-05-04', value: '2016-05-04'}]
@@ -57,19 +59,46 @@ export default {
       }
       const data = [...map.values()]
       return data.map(item => ({text: item.text, value: item.status}))
-    }
+    },
+    // 申请人筛选
+    filterPerson() {
+      // 创建对象,存数据
+      let map = new Map();
+      // 遍历数据
+      for (let item of this.tableData) {
+        // 拿到每一条
+        let v = {...item};
+        // 往里添加
+        if (!map.has(v.account)) {
+          map.set(v.account, v)
+        }
+      }
+      // 返回数据
+      const data = [...map.values()]
+      console.log("data is ", data);
+
+      return data.map(item => (
+          {
+            text: item.account,
+            value: item.account
+          }
+      ))
+    },
   },
   methods: {
 
     async getList() {
+      // 携带参数
       let response = await officeList(this.listQuery);
+      // 拿到结果
       let {code, data} = response.data;
       if (code === 20000) {
         console.log("approvalManage/index ---tableList数据请求成功", response);
 
         console.log("approvalManage/index ---时间是", data.list[0].created)
-
+        // tabel数据
         this.tableData = data.list;
+        // 总条数,用于分页
         this.rows = data.rows;
         console.log("approvalManage/index ---row is ", this.rows)
 
@@ -80,6 +109,24 @@ export default {
     filterHandler(value, row, column) {
       const property = column['property'];
       return row[property] === value;
+    },
+    // 分页,每页的条数
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      // 修改请求参数
+      this.listQuery.pageSize = val;
+      // 重新发送请求
+      this.getList();
+    },
+    // 改变页码
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+      // 修改请求参数
+      this.listQuery.pageNo = val;
+      // 重新发送请求
+      this.getList();
+    },
+    currentPage4() {
     }
 
   },
@@ -178,6 +225,8 @@ export default {
             prop="account"
             label="申请人"
             column-key="account"
+            :filters="filterPerson"
+            :filter-method="filterHandler"
         >
         </el-table-column>
 
@@ -185,9 +234,6 @@ export default {
             prop="created"
             label="申请时间"
             column-key="created">
-          <!--          <template slot-scope="scope">-->
-          <!--            {{scope.row.create | timeFilter}}-->
-          <!--          </template>-->
         </el-table-column>
 
         <el-table-column
@@ -225,7 +271,17 @@ export default {
             label="操作">
         </el-table-column>
       </el-table>
+
+
     </div>
+    <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page.sync="listQuery.pageNo"
+        :page-size="listQuery.pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="rows">
+    </el-pagination>
 
   </el-card>
 
